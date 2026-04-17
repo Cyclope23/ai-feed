@@ -1,0 +1,7 @@
+{
+  "crons": [
+    { "path": "/api/cron/fetch",  "schedule": "0 */6 * * *" },
+    { "path": "/api/cron/rank",   "schedule": "5 */6 * * *" },
+    { "path": "/api/cron/enrich", "schedule": "10 */6 * * *" }
+  ]
+}
