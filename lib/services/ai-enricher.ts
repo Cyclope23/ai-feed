@@ -40,7 +40,8 @@ export async function enrichItem(input: EnrichmentInput): Promise<EnrichmentOutp
     throw new Error('No text response from Claude');
   }
 
-  const parsed = JSON.parse(textBlock.text);
+  const raw = textBlock.text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  const parsed = JSON.parse(raw);
   return {
     summary: parsed.summary ?? '',
     practicalDescription: parsed.practicalDescription ?? '',
