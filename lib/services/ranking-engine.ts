@@ -1,6 +1,6 @@
 // Linear decay: 100 at age=0, 0 at age=720h (30d)
 const NOVELTY_MAX_AGE_HOURS = 720;
-const POP_CEILING = 50000;
+const POP_CEILING = 200000;
 const KEYWORDS = [
   'claude', 'anthropic', 'mcp', 'claude code',
   'plugin', 'skill', 'tool use', 'agent', 'sdk',
@@ -24,9 +24,9 @@ export function popularityScore(input: PopularityInput): number {
   const s = input.stars ?? 0;
   const f = input.forks ?? 0;
   const m = input.mentions ?? 0;
-  const raw = s + f * 2 + m * 5;
+  const raw = s * 1.5 + f * 3 + m * 5;
   if (raw <= 0) return 0;
-  const score = (Math.log(1 + raw) / Math.log(1 + POP_CEILING)) * 100;
+  const score = (Math.sqrt(raw) / Math.sqrt(POP_CEILING)) * 100;
   return Math.min(100, score);
 }
 
@@ -42,5 +42,5 @@ export function relevanceScore(input: { title: string; content?: string | null }
 }
 
 export function totalScore(s: { novelty: number; popularity: number; relevance: number }): number {
-  return s.novelty * 0.4 + s.popularity * 0.3 + s.relevance * 0.3;
+  return s.novelty * 0.3 + s.popularity * 0.4 + s.relevance * 0.3;
 }

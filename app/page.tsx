@@ -25,7 +25,6 @@ export default async function HomePage({ searchParams }: PageProps) {
     },
     orderBy: { rank: 'asc' },
     include: { feedItem: true },
-    take: 10,
   });
 
   const recent = await db.feedItem.findMany({

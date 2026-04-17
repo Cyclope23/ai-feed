@@ -25,14 +25,14 @@ export function RankingList({ rankings }: Props) {
   if (rankings.length === 0) {
     return (
       <section>
-        <h2 className="mb-4 text-xl font-semibold">Top Ranking Oggi</h2>
+        <h2 className="mb-4 text-xl font-semibold">Ranking Oggi</h2>
         <p className="text-zinc-500">Nessun ranking disponibile. Il primo fetch deve ancora avvenire.</p>
       </section>
     );
   }
   return (
     <section>
-      <h2 className="mb-4 text-xl font-semibold">Top Ranking Oggi</h2>
+      <h2 className="mb-4 text-xl font-semibold">Ranking Oggi ({rankings.length})</h2>
       <div className="space-y-2">
         {rankings.map(r => (
           <Link key={r.rank} href={`/item/${r.feedItem.slug}`}>
