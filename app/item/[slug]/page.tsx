@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 1800;
 
 interface Props {

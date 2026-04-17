@@ -6,6 +6,7 @@ import { RecentFeed } from '@/components/RecentFeed';
 import { CategoryFilter } from '@/components/CategoryFilter';
 import type { ItemType } from '@prisma/client';
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 1800;
 
 interface PageProps {

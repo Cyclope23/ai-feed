@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 1800;
 
 interface Props {

@@ -1,5 +1,7 @@
 import { db } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminPage() {
   const sources = await db.source.findMany({ orderBy: { name: 'asc' } });
   const lastFetch = await db.pipelineStatus.findFirst({
