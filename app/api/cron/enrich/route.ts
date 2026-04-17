@@ -6,8 +6,8 @@ import { isStepCompleted, markStepCompleted } from '@/lib/services/pipeline-stat
 import { dateUtcString } from '@/lib/utils/date';
 import { authorizeCron } from '../_auth';
 
-export const maxDuration = 60;
-const BATCH_SIZE = 5;
+export const maxDuration = 120;
+const BATCH_SIZE = 20;
 const MAX_RETRIES = 3;
 
 export async function GET(req: NextRequest) {
