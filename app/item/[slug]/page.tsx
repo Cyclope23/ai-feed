@@ -3,6 +3,7 @@ import { dateUtcString } from '@/lib/utils/date';
 import { ScoreHistoryChart } from '@/components/ScoreHistoryChart';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { StudyGuideSection } from '@/components/StudyGuide';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
@@ -131,6 +132,9 @@ export default async function ItemPage({ params }: Props) {
                 </div>
               </div>
             )}
+
+            {/* Study Guide */}
+            <StudyGuideSection slug={slug} itemTitle={item.title} />
 
             {item.rankings.length > 1 && (
               <Card>

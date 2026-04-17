@@ -63,6 +63,7 @@ model FeedItem {
   updatedAt     DateTime       @updatedAt
   rankings      DailyRanking[]
   enrichment    AIEnrichment?
+  studyGuide    StudyGuide?
 
   @@index([publishedAt])
   @@index([type])
@@ -103,6 +104,15 @@ model PipelineStatus {
   completedAt DateTime     @default(now())
 
   @@unique([step, date])
+}
+
+model StudyGuide {
+  id          String   @id @default(cuid())
+  feedItemId  String   @unique
+  feedItem    FeedItem @relation(fields: [feedItemId], references: [id])
+  content     String   // markdown content
+  model       String   @default("")
+  generatedAt DateTime @default(now())
 }
 
 model AdminUser {
