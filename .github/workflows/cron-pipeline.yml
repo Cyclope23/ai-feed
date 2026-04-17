@@ -1,0 +1,68 @@
+name: AI Feeds Pipeline
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'    # fetch
+    - cron: '5 */6 * * *'    # rank
+    - cron: '10 */6 * * *'   # enrich
+  workflow_dispatch:
+    inputs:
+      step:
+        description: 'Step to run (fetch, rank, enrich, all)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - fetch
+          - rank
+          - enrich
+          - all
+
+jobs:
+  fetch:
+    if: >-
+      github.event.schedule == '0 */6 * * *' ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.step == 'fetch' || github.event.inputs.step == 'all'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger fetch
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/fetch")
+          code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          echo "$body"
+          [ "$code" -ge 200 ] && [ "$code" -lt 300 ]
+
+  rank:
+    if: >-
+      github.event.schedule == '5 */6 * * *' ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.step == 'rank' || github.event.inputs.step == 'all'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger rank
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/rank")
+          code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          echo "$body"
+          [ "$code" -ge 200 ] && [ "$code" -lt 300 ]
+
+  enrich:
+    if: >-
+      github.event.schedule == '10 */6 * * *' ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.step == 'enrich' || github.event.inputs.step == 'all'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger enrich
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/enrich")
+          code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          echo "$body"
+          [ "$code" -ge 200 ] && [ "$code" -lt 300 ]
