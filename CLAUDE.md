@@ -28,14 +28,18 @@ Prisma reads from `.env` (not `.env.local`). Copy your DATABASE_URL there for lo
 
 1. `/api/cron/fetch` → FeedFetcher (RSS) + GitHubScanner (Octokit) → upsert FeedItems + classify type
 2. `/api/cron/rank` → RankingEngine scores all items from last 30 days → DailyRanking (in transaction)
-3. `/api/cron/enrich` → AIEnricher calls Claude API (claude-sonnet-4-6) for 5 items/batch → AIEnrichment
+3. `/api/cron/enrich` → AIEnricher calls Claude API (claude-sonnet-4-6) for 20 items/batch → AIEnrichment
 
 Pipeline coordination: each step writes to `PipelineStatus` table; next step checks previous step completed for today's date before running.
 
 **Scoring formula** (lib/services/ranking-engine.ts):
-- Novelty 40%: linear decay 100→0 over 30 days
-- Popularity 30%: log scale of (stars + forks×2 + mentions×5), ceiling 50000
+- Novelty 30%: linear decay 100→0 over 30 days
+- Popularity 40%: sqrt scale of (stars×1.5 + forks×3 + mentions×5), ceiling 200000
 - Relevance 30%: keyword matching, title worth 2× content
+
+**GitHub sources**: topic-based (`topic:claude`, `topic:mcp`, `topic:claude-code`) plus text-search based (`claude-code in:name,description,readme`, `claude plugin in:name,description`, etc.) for broader coverage.
+
+**Study Guide generation**: on-demand per item via `/api/item/[slug]/study`. Uses Claude API to generate comprehensive markdown learning guide (installation, config, code examples, workflow integration, tips). Cached in `StudyGuide` table after first generation.
 
 **Auth split** (NextAuth v5 edge-safe pattern):
 - `auth.config.ts` — edge-safe config (imported by middleware.ts, runs in Edge Runtime)
@@ -46,6 +50,22 @@ Pipeline coordination: each step writes to `PipelineStatus` table; next step che
 
 **Admin API auth**: `/api/admin/*` routes use NextAuth session checks. Middleware matcher covers both `/admin/:path*` and `/api/admin/:path*`.
 
+**Admin panel** (`/admin`): Interactive client-side dashboard with:
+- Stats overview (total items, ranked today, enriched, pending/failed)
+- Pipeline controls (trigger fetch/rank/enrich individually)
+- Source management (add/toggle/delete sources)
+
+## Pages & Routes
+
+- `/` — Homepage with ranking list, type filters, AI Enriched filter, search, pagination (20/page)
+- `/item/[slug]` — Item detail with score cards, enrichment content, workflow box, study guide, quick start
+- `/ranking/[date]` — Historical daily ranking
+- `/admin` — Admin dashboard (requires auth)
+- `/admin/login` — Login page
+- `/api/cron/{fetch,rank,enrich}` — Pipeline endpoints (CRON_SECRET auth)
+- `/api/admin/{stats,pipeline,sources,sources/[id],refresh}` — Admin API (session auth)
+- `/api/item/[slug]/study` — Study guide generation (GET to check, POST to generate)
+
 ## Key Patterns
 
 - Path alias `@/*` maps to project root
@@ -54,7 +74,10 @@ Pipeline coordination: each step writes to `PipelineStatus` table; next step che
 - Tests colocated in `__tests__/` directories adjacent to source
 - Vitest uses `globals: true` — no need to import describe/it/expect
 - AI enrichment prompts are in Italian — all generated content (summary, practicalDescription, useCase) must be in Italian
+- Study guide prompts are in Italian with code examples in English
 - Slug collision handling: appends URL suffix when titles collide
+- AI JSON responses: strip markdown fences before parsing (Claude sometimes wraps in ```json)
+- Study guide uses upsert to prevent race conditions on concurrent requests
 
 ## Env Vars
 
