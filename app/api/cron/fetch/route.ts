@@ -71,7 +71,12 @@ async function upsertItem(
     topics,
   });
 
-  const slug = slugify(data.title);
+  // Generate unique slug: append short hash if collision
+  let slug = slugify(data.title);
+  const existing = await db.feedItem.findUnique({ where: { slug } });
+  if (existing && existing.url !== data.url) {
+    slug = `${slug}-${data.url.slice(-6).replace(/[^a-z0-9]/gi, '')}`;
+  }
 
   await db.feedItem.upsert({
     where: { url: data.url },
@@ -81,7 +86,6 @@ async function upsertItem(
       content: data.content,
       githubStars: data.githubStars,
       githubForks: data.githubForks,
-      mentionCount: { increment: 1 },
       type,
     },
     create: {
