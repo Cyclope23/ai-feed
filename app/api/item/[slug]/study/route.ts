@@ -41,12 +41,10 @@ export async function POST(
       enrichmentUseCase: item.enrichment?.useCase,
     });
 
-    const guide = await db.studyGuide.create({
-      data: {
-        feedItemId: item.id,
-        content,
-        model: ENRICHMENT_MODEL,
-      },
+    const guide = await db.studyGuide.upsert({
+      where: { feedItemId: item.id },
+      update: { content, model: ENRICHMENT_MODEL, generatedAt: new Date() },
+      create: { feedItemId: item.id, content, model: ENRICHMENT_MODEL },
     });
 
     return NextResponse.json({
