@@ -2,28 +2,34 @@ import { Suspense } from 'react';
 import { db } from '@/lib/db';
 import { dateUtcString } from '@/lib/utils/date';
 import { RankingList } from '@/components/RankingList';
-import type { ItemType } from '@prisma/client';
+import type { ItemType, Prisma } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 1800;
 
 interface PageProps {
-  searchParams: Promise<{ type?: string; page?: string; q?: string }>;
+  searchParams: Promise<{ type?: string; page?: string; q?: string; enriched?: string }>;
 }
 
 export default async function HomePage({ searchParams }: PageProps) {
-  const { type, page, q } = await searchParams;
+  const { type, page, q, enriched } = await searchParams;
   const today = dateUtcString();
   const itemType = type as ItemType | undefined;
   const currentPage = Math.max(1, parseInt(page ?? '1', 10) || 1);
   const perPage = 20;
   const search = q?.trim() ?? '';
+  const onlyEnriched = enriched === '1';
 
-  const where = {
-    date: today,
-    ...(itemType ? { feedItem: { type: itemType } } : {}),
-    ...(search ? { feedItem: { title: { contains: search, mode: 'insensitive' as const } } } : {}),
-  };
+  const where: Prisma.DailyRankingWhereInput = { date: today };
+
+  const feedItemFilter: Prisma.FeedItemWhereInput = {};
+  if (itemType) feedItemFilter.type = itemType;
+  if (search) feedItemFilter.title = { contains: search, mode: 'insensitive' };
+  if (onlyEnriched) feedItemFilter.enrichment = { is: { status: 'COMPLETED' } };
+
+  if (Object.keys(feedItemFilter).length > 0) {
+    where.feedItem = { is: feedItemFilter };
+  }
 
   const [rankings, totalCount] = await Promise.all([
     db.dailyRanking.findMany({
@@ -64,6 +70,7 @@ export default async function HomePage({ searchParams }: PageProps) {
             totalPages={totalPages}
             currentType={type}
             currentSearch={search}
+            currentEnriched={onlyEnriched}
           />
         </Suspense>
       </div>
