@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SourceType {
+  RSS
+  GITHUB
+}
+
+enum ItemType {
+  NEWS
+  PLUGIN
+  SKILL
+  FRAMEWORK
+}
+
+enum PipelineStep {
+  FETCH
+  RANK
+  ENRICH
+}
+
+enum EnrichmentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model Source {
+  id                  String     @id @default(cuid())
+  name                String
+  type                SourceType
+  url                 String     @unique
+  category            String?
+  isActive            Boolean    @default(true)
+  lastFetchedAt       DateTime?
+  fetchIntervalHours  Int        @default(6)
+  createdAt           DateTime   @default(now())
+  items               FeedItem[]
+}
+
+model FeedItem {
+  id            String         @id @default(cuid())
+  sourceId     String
+  source        Source         @relation(fields: [sourceId], references: [id])
+  title         String
+  slug          String         @unique
+  url           String         @unique
+  description   String?
+  content       String?
+  publishedAt   DateTime
+  type          ItemType       @default(NEWS)
+  githubStars   Int?
+  githubForks   Int?
+  mentionCount  Int            @default(1)
+  imageUrl      String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  rankings      DailyRanking[]
+  enrichment    AIEnrichment?
+
+  @@index([publishedAt])
+  @@index([type])
+}
+
+model DailyRanking {
+  id              String   @id @default(cuid())
+  feedItemId      String
+  feedItem        FeedItem @relation(fields: [feedItemId], references: [id])
+  date            String
+  noveltyScore    Float
+  popularityScore Float
+  relevanceScore  Float
+  totalScore      Float
+  rank            Int
+
+  @@unique([feedItemId, date])
+  @@index([date, rank])
+}
+
+model AIEnrichment {
+  id                   String           @id @default(cuid())
+  feedItemId           String           @unique
+  feedItem             FeedItem         @relation(fields: [feedItemId], references: [id])
+  summary              String           @default("")
+  practicalDescription String           @default("")
+  useCase              String           @default("")
+  generatedAt          DateTime?
+  model                String           @default("")
+  retryCount           Int              @default(0)
+  status               EnrichmentStatus @default(PENDING)
+}
+
+model PipelineStatus {
+  id          String       @id @default(cuid())
+  step        PipelineStep
+  date        String
+  completedAt DateTime     @default(now())
+
+  @@unique([step, date])
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
