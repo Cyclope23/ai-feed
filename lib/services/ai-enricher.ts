@@ -12,13 +12,14 @@ export interface EnrichmentOutput {
   useCase: string;
 }
 
-const SYSTEM_PROMPT = `You analyze tools and news from the Claude/Anthropic AI ecosystem.
-Given an item (plugin, skill, framework, or news article), produce a JSON object with:
-- summary: 1-2 sentence summary
-- practicalDescription: what it does and how it works in practice (2-3 sentences)
-- useCase: a concrete example of when and how to use it (2-3 sentences)
+const SYSTEM_PROMPT = `Analizzi tool e notizie dell'ecosistema Claude/Anthropic AI.
+Dato un item (plugin, skill, framework o articolo), produci un oggetto JSON con:
+- summary: riassunto di 1-2 frasi in italiano
+- practicalDescription: cosa fa e come funziona in pratica (2-3 frasi in italiano)
+- useCase: un esempio concreto e pratico di quando e come usarlo (2-3 frasi in italiano)
 
-Respond ONLY with valid JSON, no markdown fences.`;
+IMPORTANTE: Rispondi SEMPRE in italiano.
+Rispondi SOLO con JSON valido, senza markdown fences.`;
 
 export async function enrichItem(input: EnrichmentInput): Promise<EnrichmentOutput> {
   const userText = [
